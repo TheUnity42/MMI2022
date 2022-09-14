@@ -16,12 +16,12 @@ def main(port):
 
     # send the handshake start byte, and wait for the response.
     ser.write(bytes([HANDSHAKE_START]))
-    response = ser.read()
+    # response = ser.read()
 
     # if the response is not the handshake response, exit.
-    if response != bytes([HANDSHAKE_RESPONSE]):
-        print("Incorrect Handshake response. Please restart the arduino and try again.")
-        sys.exit(1)
+    # if response != bytes([HANDSHAKE_RESPONSE]):
+    #     print("Incorrect Handshake response. Please restart the arduino and try again.")
+    #     sys.exit(1)
 
     # prompt user for the duration of the recording.
     duration = int(input("Enter the duration of the recording in seconds: "))
