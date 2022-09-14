@@ -30,22 +30,24 @@ def main(port):
     # convert to milliseconds, and send the start code.
     millis_duration = duration * 1000
     # send the 4 byte duration to the arduino.
-    ser.write(bytes([START_CODE, millis_duration >> 24,
-              millis_duration >> 16, millis_duration >> 8, millis_duration]))
+    ser.write(bytes([START_CODE]))
+    ser.write(millis_duration.to_bytes(4, byteorder='big'))
+
+    # switch to non blocking mode.
+    ser.timeout = 0
 
     samples = list()
     sample_times = list()
     start_time = time.time()
     while time.time() - start_time < duration:
-        # read the 4 bytes from the arduino.
+        # read a 4 byte integer from the arduino.        
         data = ser.read(4)
-        # convert the 4 bytes to a 32 bit integer.
-        sample = int.from_bytes(data, byteorder='big', signed=True)
-        # append the sample to the list of samples.
-        samples.append(sample)
-        sample_times.append(time.time() - start_time)
+        if len(data) == 4:
+            sample = int.from_bytes(data, byteorder='big')
+            samples.append(sample)
+            sample_times.append(time.time() - start_time)
 
-    print("Done recording.")
+    print(f"Done recording. Recorded {len(samples)} samples.")
 
     # save the samples to a csv file.
     with open("samples.csv", "w") as f:
@@ -63,6 +65,7 @@ def main(port):
 
     # plot the difference between samples.
     ax[1].plot(sample_times[1:], np.diff(samples))
+    print(np.diff(samples))
     ax[1].set(xlabel='time (s)', ylabel='sample',
               title=f"Sample Differences")
     ax[1].grid()
@@ -72,6 +75,9 @@ def main(port):
     ax[2].set(xlabel='time (s)', ylabel='sample',
                 title=f"Running Sum of Samples")
     ax[2].grid()
+
+    # tight layout and show the plot.
+    fig.tight_layout()
 
     fig.savefig("samples.png")
 
