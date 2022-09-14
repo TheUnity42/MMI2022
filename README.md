@@ -22,3 +22,12 @@ conda env export | grep -v "^prefix: " > environment.yml
 ```
 
 If you need to add any extra packages during development, try and use Conda first, then pip. If you add dependencies to the enviroment, re-export and update the conda enviroment.yml file.  
+
+### DAD Submodule
+
+Previous team code is stored in the DAD_Software submodule. To use it, a conda enviroment can be created from the dad-enviroment.yml file. Then run
+
+```bash
+conda activate MMI-DAD
+python DAD.py
+```
