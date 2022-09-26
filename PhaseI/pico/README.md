@@ -1,5 +1,6 @@
 # Raspberry Pi Pico W Sensor Code
 
+notes on how to write code for the pi, right now idk... rip
 
 aight so for some quick goals
 
