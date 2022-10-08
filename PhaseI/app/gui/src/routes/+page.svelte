@@ -2,6 +2,7 @@
 	import StatusPanel from '../Components/StatusPanel.svelte';
 	import HelpModality from '../Components/HelpModality.svelte';
 	import SensorDrawer from '../Components/SensorDrawer.svelte';
+    import Graph from '../Components/Graph.svelte';
 </script>
 
 <SensorDrawer>
@@ -14,7 +15,8 @@
 		</label>
 		<HelpModality />
 		<div class="absolute left-0 h-1/2 w-2/3 p-5">
-			<div class="bg-slate-800 w-full h-full" />
+			<!-- <div class="bg-slate-800 w-full h-full" /> -->
+            <Graph />
 		</div>
 		<div class="absolute right-0 h-1/2 w-1/3 p-5">
 			<StatusPanel />
