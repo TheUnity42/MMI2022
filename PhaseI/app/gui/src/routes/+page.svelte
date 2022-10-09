@@ -3,6 +3,7 @@
 	import HelpModality from '../Components/HelpModality.svelte';
 	import SensorDrawer from '../Components/SensorDrawer.svelte';
     import Graph from '../Components/Graph.svelte';
+	import LineGraph from '../Components/LineGraph.svelte';
 </script>
 
 <SensorDrawer>
@@ -16,7 +17,9 @@
 		<HelpModality />
 		<div class="absolute left-0 h-1/2 w-2/3 p-5">
 			<!-- <div class="bg-slate-800 w-full h-full" /> -->
-            <Graph />
+            <Graph>
+				<LineGraph xrng="100" yrng="100" />
+			</Graph>
 		</div>
 		<div class="absolute right-0 h-1/2 w-1/3 p-5">
 			<StatusPanel />
