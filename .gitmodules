@@ -1,3 +1,6 @@
 [submodule "DAD_Software"]
 	path = DAD_Software
 	url = https://github.com/RivasLeal/DAD_Software.git
+[submodule "pico/pico-sdk"]
+	path = pico/pico-sdk
+	url = https://github.com/raspberrypi/pico-sdk.git
