@@ -1,4 +1,6 @@
 <script>
 	import "../global.css";
 </script>
-<slot />
+<div data-theme="light">
+	<slot />
+</div>

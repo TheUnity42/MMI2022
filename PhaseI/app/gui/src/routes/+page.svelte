@@ -2,8 +2,9 @@
 	import StatusPanel from '../Components/StatusPanel.svelte';
 	import HelpModality from '../Components/HelpModality.svelte';
 	import SensorDrawer from '../Components/SensorDrawer.svelte';
-    import Graph from '../Components/Graph.svelte';
-	import LineGraph from '../Components/LineGraph.svelte';
+    import Graph from '../Components/Graphing/Graph.svelte';
+	import LineGraph from '../Components/Graphing/LineGraph.svelte';
+	import Console from '../Components/Console.svelte';
 </script>
 
 <SensorDrawer>
@@ -18,7 +19,7 @@
 		<div class="absolute left-0 h-1/2 w-2/3 p-5">
 			<!-- <div class="bg-slate-800 w-full h-full" /> -->
             <Graph>
-				<LineGraph xrng="100" yrng="100" />
+				<LineGraph xrng="100" yrng="4" />
 			</Graph>
 		</div>
 		<div class="absolute right-0 h-1/2 w-1/3 p-5">
@@ -28,7 +29,7 @@
 			<label for="sensor-drawer" class="btn btn-primary px-8">Manage Sensors</label>
 		</div>
 		<div class="absolute bottom-5 right-5 h-1/3 w-1/2 px-5">
-			<div class="bg-slate-800 w-full h-full"><h1 class="text-black pl-2">$></h1></div>
+			<Console />
 		</div>
 	</div>
 </SensorDrawer>

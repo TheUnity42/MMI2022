@@ -1,5 +1,5 @@
 <script>    
-    import { graphWidth, graphHeight } from '../stores/GraphStore.js';
+    import { graphWidth, graphHeight } from '../../stores/GraphStore.js';
     // store width and height of this component
 
     let xSteps = 10;
@@ -9,8 +9,8 @@
     const tickLength = 5;
 </script>
 
-<div class="w-full h-full outline shadow-md rounded-sm flex justify-center" bind:clientWidth={$graphWidth} bind:clientHeight={$graphHeight}>
-    <svg width="{$graphWidth}" height="{$graphWidth}" class="m-auto">
+<div class="bg-neutral w-full h-full outline shadow-md rounded-sm flex justify-center" bind:clientWidth={$graphWidth} bind:clientHeight={$graphHeight}>
+    <svg width="{$graphWidth}" height="{$graphHeight}" class="m-auto">
         <!-- <rect x="0" y="0" width="100" height="100" fill="red" /> -->
         {#each {length: xSteps + 1} as _, i}
             <line x1="{100*i / xSteps}%" y1="0%" x2="{100*i / xSteps}%" y2="100%" stroke="black" stroke-opacity="0.15"/>
