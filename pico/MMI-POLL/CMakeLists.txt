@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.13)
 # note: this must happen before project()
 include(../include/pico_sdk_import.cmake)
 
-project(mmitcp C CXX ASM)
+project(mmipoll C CXX ASM)
 
 # initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
@@ -13,8 +13,9 @@ pico_sdk_init()
 # target_link_libraries(main pico_stdlib hardware_adc)
 
 add_executable(main
-        picow_tcp_server.c
+        pico_tcp_poll_sensor.c
         ../lib/tcp_server.c
+        ../lib/adc_queue.c
         )
 target_compile_definitions(main PRIVATE
         WIFI_SSID=\"${WIFI_SSID}\"
@@ -26,7 +27,7 @@ target_include_directories(main PRIVATE
         )
 target_link_libraries(main
         pico_cyw43_arch_lwip_threadsafe_background
-        pico_stdlib
+        pico_stdlib hardware_adc
         )
 
 # enable usb output, disable uart output

@@ -11,7 +11,7 @@
 		goto prog_end;                                                                             \
 	}
 
-void on_recieve(struct tcp_server *server, uint16_t len);
+void on_receive(struct tcp_server *server, uint16_t len);
 
 int main() {
 	stdio_init_all();
@@ -23,7 +23,7 @@ int main() {
 
 	struct tcp_server *server = init_defaults();
 
-	server->on_recv = &on_recieve;
+	server->on_recv = &on_receive;
 
 	HANDLE_SETUP_ERROR(!server)
 
@@ -39,7 +39,7 @@ prog_end:
 	return 0;
 }
 
-void on_recieve(struct tcp_server *server, uint16_t len) {
+void on_receive(struct tcp_server *server, uint16_t len) {
 	// log message
 	printf("Server recieved: %s\n", (char *)server->rx_buffer);
 	// echo message

@@ -23,7 +23,6 @@ int main() {
 	stdio_init_all();
 
 	adc_init();
-
 	// Make sure GPIO is high-impedance, no pullups etc
 	adc_gpio_init(26);
 	// Select ADC input 0 (GPIO26)
