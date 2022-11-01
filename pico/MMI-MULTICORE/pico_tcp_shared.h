@@ -1,7 +1,7 @@
-#ifndef PICOTCP_POLL_SENSOR_H
-#define PICOTCP_POLL_SENSOR_H
+#ifndef PICO_TCP_SHARED_H
+#define PICO_TCP_SHARED_H
 
-#include "adc_queue.h"
+#include "pico/util/queue.h"
 #include "tcp_server.h"
 
 #define TCP_PORT 4242
@@ -17,17 +17,24 @@
 #define MESSAGE_STR "PICO_W[QUEUE_UTILIZATION(%f\%), ADC_0(%llu, %f)]\n"
 #define MESSAGE_BUFFER_SIZE 128
 
+typedef struct SAMPLE_T_ {
+	uint16_t value;
+	uint64_t timestamp;
+} sample_t;
+
 // 12-bit conversion, assume max value == ADC_VREF == 3.3 V
-const float CONVERSION_FACTOR = 3.3f / (1 << 12);
+extern const float CONVERSION_FACTOR;
 
-const char *ADC_REQUEST = "ADC";
+extern const char *ADC_REQUEST;
 
-Queue *sample_queue;
+extern queue_t *adc_queue;
 
 void on_receive(struct tcp_server *server, uint16_t len);
 
 bool adc_callback(struct repeating_timer *t);
 
 void adc_initialize();
+
+void adc_core_main();
 
 #endif /* PICOTCP_POLL_SENSOR_H */

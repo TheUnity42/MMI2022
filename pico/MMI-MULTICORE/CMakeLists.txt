@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.13)
 # note: this must happen before project()
 include(../include/pico_sdk_import.cmake)
 
-project(mmipoll C CXX ASM)
+project(mmifull C CXX ASM)
 
 # initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
@@ -13,7 +13,9 @@ pico_sdk_init()
 # target_link_libraries(main pico_stdlib hardware_adc)
 
 add_executable(main
-        pico_tcp_poll_sensor.c
+        tcp_server_core.c
+        adc_reader_core.c
+        constants.c
         ../lib/tcp_server.c
         ../lib/adc_queue.c
         )
@@ -27,7 +29,7 @@ target_include_directories(main PRIVATE
         )
 target_link_libraries(main
         pico_cyw43_arch_lwip_threadsafe_background
-        pico_stdlib hardware_adc
+        pico_stdlib hardware_adc pico_multicore
         )
 
 # enable usb output, disable uart output

@@ -12,3 +12,5 @@ Cargo.lock
 **/*.csv
 **/*.bin
 **/*.o
+
+**/.vscode/
