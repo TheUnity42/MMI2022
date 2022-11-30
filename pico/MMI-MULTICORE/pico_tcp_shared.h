@@ -5,7 +5,7 @@
 #include "tcp_server.h"
 
 #define TCP_PORT 4242
-#define MAX_SAMPLES 256
+#define MAX_SAMPLES 32
 
 #define SETUP_ERROR_MSG "Unable to setup TCP server\n"
 #define HANDLE_SETUP_ERROR(cond)                                                                   \
@@ -14,7 +14,8 @@
 		goto PROGRAM_END;                                                                          \
 	}
 
-#define MESSAGE_STR "PICO_W[QUEUE_UTILIZATION(%f\%), ADC_0(%llu, %f)]\n"
+#define MESSAGE_STR "PICO_W[QUEUE_HEALTH(%f\%), ADC_0(%llu, %f)]\n"
+#define MESSAGE_STR "(%f,%llu,%f)\n"
 #define MESSAGE_BUFFER_SIZE 128
 
 typedef struct SAMPLE_T_ {

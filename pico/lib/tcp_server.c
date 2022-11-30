@@ -46,7 +46,7 @@ err_t tcp_server_accept(void *arg, struct tcp_pcb *newpcb, err_t err) {
 		return ERR_VAL;
 	}
 	// log new connection
-	printf("[TCPServer] Client connected\n");
+	printf("[TCPServer] Client Connected\n");
 
 	// set callback arguments
 	((struct tcp_server *)arg)->client_pcb = newpcb;

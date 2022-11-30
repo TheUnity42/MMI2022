@@ -18,7 +18,7 @@ void adc_core_main() {
 
 	// setup the repeating timer to call the adc every 10ms
 	struct repeating_timer adc_timer;
-	add_repeating_timer_ms(10, adc_callback, (void *)NULL, &adc_timer);
+	add_repeating_timer_ms(5, adc_callback, (void *)NULL, &adc_timer);
 
 	// lock up this core as its only needed for interrupts now
 	while(1) {

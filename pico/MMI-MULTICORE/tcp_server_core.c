@@ -43,12 +43,13 @@ int main() {
 
 			// format into buffer
 			buffer_length = snprintf(buffer, MESSAGE_BUFFER_SIZE, MESSAGE_STR,
-									 (float)queue_get_level(adc_queue) / (float)MAX_SAMPLES,
+									 (float)queue_get_level(adc_queue),
 									 sample.timestamp, sample.value * CONVERSION_FACTOR);
-			// send buffer to client lazily
+			// send buffer to client
 			tcp_write_immediate(server, buffer, buffer_length);
 		} else {
 			// do nothing
+			sleep_ms(10);
 			tight_loop_contents();
 		}
 	}
@@ -60,5 +61,8 @@ PROGRAM_END:
 }
 
 void on_receive(struct tcp_server *server, uint16_t len) {
+	int length = strlen(server->rx_buffer);
+	for (; length > 0 && isspace(server->rx_buffer[length]); length--);
+	server->rx_buffer[length] = '\0';
 	printf("Recieved command %s from client.\n", server->rx_buffer);
 }
