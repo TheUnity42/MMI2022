@@ -13,117 +13,20 @@
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
 
-#define PORT 6001
-#define HOST "fedora"
-#define MAX_SAMPLES 32
+#include "main.h"
 
-#define DEBUG_printf printf
-
-#define MESSAGE_STR "PICO_W[QUEUE_HEALTH(%f\%), ADC_0(%llu, %f)]\n"
-#define MESSAGE_STR "(%f,%llu,%f)\n"
-#define MESSAGE_BUFFER_SIZE 128
-
-const inline float CONVERSION_FACTOR = 3.3f / (1 << 12);
-
-unsigned int loop = 0;
-alarm_pool_t *alarm_pool;
-repeating_timer_t repeating_timer;
 struct udp_pcb *upcb;
-struct udp_pcb *spcb;
 
-queue_t *adc_queue;
-
-bool timer_flag = false;
-
-static int64_t set_send_UDP(alarm_id_t id, void *userdata) { timer_flag = true; }
-
-void send_UDP(ip_addr_t* destAddr, int port, void *data, int data_size) {
-	struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, data_size, PBUF_RAM);
-	memcpy(p->payload, data, data_size);
-	cyw43_arch_lwip_begin();
-	udp_sendto(upcb, p, destAddr, port);
-	cyw43_arch_lwip_end();
-	pbuf_free(p);
-}
-
-void recv_from_UDP(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t port) {
-
-	printf("received from %d.%d.%d.%d port=%d\n", addr->addr & 0xff, (addr->addr >> 8) & 0xff,
-		   (addr->addr >> 16) & 0xff, addr->addr >> 24, port);
-
-	printf("Length = %d , Total Length = %d\n", p->len, p->tot_len);
-	printf("payload -> %s\n", (char *)p->payload);
-}
-
-struct dns_callback {
-	uint8_t valid;
-	ip_addr_t *addr;
-};
-
-typedef struct SAMPLE_T_ {
-	uint16_t value;
-	uint64_t timestamp;
-} sample_t;
-
-// https://www.nongnu.org/lwip/2_0_x/group__udp__raw.html
-
-void on_dns_found(const char *name, const ip_addr_t *ipaddr, void *callback_arg) {
-	struct dns_callback *callback_data = (struct dns_callback *)callback_arg;
-
-	char *ip_name = ip4addr_ntoa(ipaddr);
-
-	// printf("[UDPServer] DNS Callback %s, %s\n", name, ip_name);
-
-	if (ip_name) {
-		callback_data->addr = ipaddr;
-		callback_data->valid = 1;
-	} else {
-		printf("[UDPServer] Failed to resolve host\n");
-	}
-}
-
-bool adc_callback(struct repeating_timer *t) {
-	// make a new sample and read data into it
-	sample_t sample;
-	// read the adc
-	sample.value = adc_read();
-	// timestamp the sample
-	sample.timestamp = to_us_since_boot(get_absolute_time());
-	// enqueue the sample (throw away the error, we jsut wont write beyond the max)
-	bool success = queue_try_add(adc_queue, &sample);
-	// return true to keep the timer going
-	return true;
-}
-
-void adc_core_main() {
-	// init adc
-	adc_initialize();
-
-	// setup an spinlocked queue to hold up to MAX_SAMPLES samples
-	adc_queue = (queue_t *)malloc(sizeof(queue_t));
-	queue_init(adc_queue, sizeof(sample_t), MAX_SAMPLES);
-
-	// setup the repeating timer to call the adc every 10ms
-	struct repeating_timer adc_timer;
-	add_repeating_timer_ms(5, adc_callback, (void *)NULL, &adc_timer);
-
-	// lock up this core as its only needed for interrupts now
-	while (1) {
-		// do nothing
-		tight_loop_contents();
-	}
-}
-
-void adc_initialize() {
-	adc_init();
-	// Make sure GPIO is high-impedance, no pullups etc
-	adc_gpio_init(26);
-	// Select ADC input 0 (GPIO26)
-	adc_select_input(0);
-}
+// volatile variables
+volatile queue_t *adc_queue;
+volatile bool timer_flag = false;
 
 int main() {
-	
+	// create local vars
+	alarm_pool_t *alarm_pool;
+	repeating_timer_t repeating_timer;
+	struct udp_pcb *spcb;
+
 	stdio_init_all();
 
 	if (cyw43_arch_init()) {
@@ -183,13 +86,6 @@ int main() {
 	sample_t sample;
 
 	while (1) {
-		// if (timer_flag) {
-		// 	memset(buffer, 0, BUF_SIZE);
-		// 	sprintf(buffer, "%u\n", loop++);
-		// 	send_UDP(callback_struct.addr, RECEIVER_PORT, buffer, BUF_SIZE);
-		// 	timer_flag = false;
-		// }
-		// cyw43_arch_poll();
 		if (adc_queue && timer_flag) {
 			// send all data we have available
 			while(queue_try_remove(adc_queue, &sample)) {
@@ -211,4 +107,77 @@ int main() {
 	udp_remove(spcb);
 	cyw43_arch_deinit();
 	return 0;
+}
+
+static int64_t set_send_UDP(alarm_id_t id, void *userdata) { timer_flag = true; }
+
+void send_UDP(ip_addr_t *destAddr, int port, void *data, int data_size) {
+	struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, data_size, PBUF_RAM);
+	memcpy(p->payload, data, data_size);
+	cyw43_arch_lwip_begin();
+	udp_sendto(upcb, p, destAddr, port);
+	cyw43_arch_lwip_end();
+	pbuf_free(p);
+}
+
+void recv_from_UDP(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t port) {
+
+	printf("[UDPServer] Received from %d.%d.%d.%d port=%d\n", addr->addr & 0xff,
+		   (addr->addr >> 8) & 0xff, (addr->addr >> 16) & 0xff, addr->addr >> 24, port);
+
+	printf("[UDPServer] Length = %d , Total Length = %d\n", p->len, p->tot_len);
+	printf("[UDPServer] payload -> %s\n", (char *)p->payload);
+}
+
+void on_dns_found(const char *name, const ip_addr_t *ipaddr, void *callback_arg) {
+	struct dns_callback *callback_data = (struct dns_callback *)callback_arg;
+
+	char *ip_name = ip4addr_ntoa(ipaddr);
+
+	if (ip_name) {
+		callback_data->addr = ipaddr;
+		callback_data->valid = 1;
+	} else {
+		printf("[UDPServer] Failed to resolve host\n");
+	}
+}
+
+bool adc_callback(struct repeating_timer *t) {
+	// make a new sample and read data into it
+	sample_t sample;
+	// read the adc
+	sample.value = adc_read();
+	// timestamp the sample
+	sample.timestamp = to_us_since_boot(get_absolute_time());
+	// enqueue the sample (throw away the error, we jsut wont write beyond the max)
+	bool success = queue_try_add(adc_queue, &sample);
+	// return true to keep the timer going
+	return true;
+}
+
+void adc_core_main() {
+	// init adc
+	adc_initialize();
+
+	// setup an spinlocked queue to hold up to MAX_SAMPLES samples
+	adc_queue = (queue_t *)malloc(sizeof(queue_t));
+	queue_init(adc_queue, sizeof(sample_t), MAX_SAMPLES);
+
+	// setup the repeating timer to call the adc every 10ms
+	struct repeating_timer adc_timer;
+	add_repeating_timer_ms(5, adc_callback, (void *)NULL, &adc_timer);
+
+	// lock up this core as its only needed for interrupts now
+	while (1) {
+		// do nothing
+		tight_loop_contents();
+	}
+}
+
+void adc_initialize() {
+	adc_init();
+	// Make sure GPIO is high-impedance, no pullups etc
+	adc_gpio_init(26);
+	// Select ADC input 0 (GPIO26)
+	adc_select_input(0);
 }
