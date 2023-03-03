@@ -4,11 +4,11 @@
 #define PORT 6001
 #define HOST "fedora"
 #define MAX_SAMPLES 32
+#define RESPONSE_PORT 6001
 
 #define DEBUG_printf printf
 
-#define MESSAGE_STR "PICO_W[QUEUE_HEALTH(%f\%), ADC_0(%llu, %f)]\n"
-#define MESSAGE_STR "(%f,%llu,%f)\n"
+#define MESSAGE_STR "(%f,%llu,%f,%f,%f)\n"
 #define MESSAGE_BUFFER_SIZE 128
 
 const inline float CONVERSION_FACTOR = 3.3f / (1 << 12);
@@ -19,7 +19,10 @@ struct dns_callback {
 };
 
 typedef struct SAMPLE_T_ {
-	uint16_t value;
+	uint16_t value0;
+	uint16_t value1;
+	uint16_t value2;
+	uint16_t temperature;
 	uint64_t timestamp;
 } sample_t;
 

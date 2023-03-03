@@ -2,6 +2,7 @@
 #include <time.h>
 
 #include "pico/cyw43_arch.h"
+#include "pico/multicore.h"
 #include "pico/stdlib.h"
 #include "pico/util/queue.h"
 
@@ -18,8 +19,8 @@
 struct udp_pcb *upcb;
 
 // volatile variables
-volatile queue_t *adc_queue;
-volatile bool timer_flag = false;
+queue_t *adc_queue;
+bool timer_flag = false;
 
 int main() {
 	// create local vars
@@ -52,12 +53,11 @@ int main() {
 	upcb = udp_new();
 	spcb = udp_new();
 
-	err_t err = udp_bind(spcb, IP_ADDR_ANY, 6002);
+	err_t err = udp_bind(spcb, IP_ADDR_ANY, RESPONSE_PORT);
 
 	udp_recv(spcb, recv_from_UDP, NULL);
 
 	ip_addr_t destination_ip;
-	// ip4addr_aton(RECEIVER_IP, &destination_ip);
 
 	printf("[UDPServer] DNS Lookup in progress...\n");
 	struct dns_callback callback_struct = {0};
@@ -90,9 +90,11 @@ int main() {
 			// send all data we have available
 			while(queue_try_remove(adc_queue, &sample)) {
 				// format into buffer
-				buffer_length = snprintf(buffer, MESSAGE_BUFFER_SIZE, MESSAGE_STR,
-										 (float)queue_get_level(adc_queue), sample.timestamp,
-										 sample.value * CONVERSION_FACTOR);
+				buffer_length = snprintf(
+					buffer, MESSAGE_BUFFER_SIZE, MESSAGE_STR, (float)queue_get_level(adc_queue),
+					sample.timestamp, sample.value0 * CONVERSION_FACTOR,
+					sample.value1 * CONVERSION_FACTOR, sample.value2 * CONVERSION_FACTOR,
+					27.0 - (sample.temperature * CONVERSION_FACTOR - 0.706) / 0.001721);
 				// send buffer to server
 				send_UDP(callback_struct.addr, PORT, buffer, buffer_length);
 			}			
@@ -146,7 +148,14 @@ bool adc_callback(struct repeating_timer *t) {
 	// make a new sample and read data into it
 	sample_t sample;
 	// read the adc
-	sample.value = adc_read();
+	adc_select_input(0);
+	sample.value0 = adc_read();
+	adc_select_input(1);
+	sample.value1 = adc_read();
+	adc_select_input(2);
+	sample.value2 = adc_read();
+	adc_select_input(3);
+	sample.temperature = adc_read();
 	// timestamp the sample
 	sample.timestamp = to_us_since_boot(get_absolute_time());
 	// enqueue the sample (throw away the error, we jsut wont write beyond the max)
