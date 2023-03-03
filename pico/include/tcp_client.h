@@ -5,7 +5,8 @@
 #include "pico/stdlib.h"
 
 #include "lwip/pbuf.h"
-#include "lwip/tcp.h"
+#include "lwip/udp.h"
+#include "lwip/dns.h"
 
 #include "lwipopts.h"
 

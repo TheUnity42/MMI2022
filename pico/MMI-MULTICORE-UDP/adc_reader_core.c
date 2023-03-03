@@ -4,7 +4,7 @@
 #include "hardware/adc.h"
 #include "hardware/gpio.h"
 #include "hardware/timer.h"
-#include "pico_tcp_shared.h"
+#include "shared.h"
 
 queue_t *adc_queue;
 

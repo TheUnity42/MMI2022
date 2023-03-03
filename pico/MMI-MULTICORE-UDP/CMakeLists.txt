@@ -13,11 +13,9 @@ pico_sdk_init()
 # target_link_libraries(main pico_stdlib hardware_adc)
 
 add_executable(main
-        tcp_server_core.c
+        udp_server_core.c
         adc_reader_core.c
-        constants.c
-        ../lib/tcp_server.c
-        ../lib/adc_queue.c
+        shared.c
         )
 target_compile_definitions(main PRIVATE
         WIFI_SSID=\"${WIFI_SSID}\"
