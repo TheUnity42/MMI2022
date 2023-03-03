@@ -9,7 +9,7 @@
 #define DEBUG_printf printf
 
 #define MESSAGE_STR "(%f,%llu,%f,%f,%f)\n"
-#define MESSAGE_BUFFER_SIZE 128
+#define MSG_BUFFER_SIZE 128
 
 const inline float CONVERSION_FACTOR = 3.3f / (1 << 12);
 

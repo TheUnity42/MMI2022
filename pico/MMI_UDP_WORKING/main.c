@@ -81,7 +81,7 @@ int main() {
 	// UDP has been fully initialized, start the ADC core
 	multicore_launch_core1(adc_core_main);
 
-	char buffer[32];
+	char buffer[MSG_BUFFER_SIZE];
 	uint16_t buffer_length = 0;
 	sample_t sample;
 
@@ -91,7 +91,7 @@ int main() {
 			while(queue_try_remove(adc_queue, &sample)) {
 				// format into buffer
 				buffer_length = snprintf(
-					buffer, MESSAGE_BUFFER_SIZE, MESSAGE_STR, (float)queue_get_level(adc_queue),
+					buffer, MSG_BUFFER_SIZE, MESSAGE_STR, (float)queue_get_level(adc_queue),
 					sample.timestamp, sample.value0 * CONVERSION_FACTOR,
 					sample.value1 * CONVERSION_FACTOR, sample.value2 * CONVERSION_FACTOR,
 					27.0 - (sample.temperature * CONVERSION_FACTOR - 0.706) / 0.001721);
@@ -123,7 +123,6 @@ void send_UDP(ip_addr_t *destAddr, int port, void *data, int data_size) {
 }
 
 void recv_from_UDP(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t port) {
-
 	printf("[UDPServer] Received from %d.%d.%d.%d port=%d\n", addr->addr & 0xff,
 		   (addr->addr >> 8) & 0xff, (addr->addr >> 16) & 0xff, addr->addr >> 24, port);
 
@@ -134,9 +133,7 @@ void recv_from_UDP(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *ad
 void on_dns_found(const char *name, const ip_addr_t *ipaddr, void *callback_arg) {
 	struct dns_callback *callback_data = (struct dns_callback *)callback_arg;
 
-	char *ip_name = ip4addr_ntoa(ipaddr);
-
-	if (ip_name) {
+	if (ipaddr) {
 		callback_data->addr = ipaddr;
 		callback_data->valid = 1;
 	} else {
@@ -172,7 +169,7 @@ void adc_core_main() {
 	adc_queue = (queue_t *)malloc(sizeof(queue_t));
 	queue_init(adc_queue, sizeof(sample_t), MAX_SAMPLES);
 
-	// setup the repeating timer to call the adc every 10ms
+	// setup the repeating timer to call the adc
 	struct repeating_timer adc_timer;
 	add_repeating_timer_ms(5, adc_callback, (void *)NULL, &adc_timer);
 
@@ -187,6 +184,9 @@ void adc_initialize() {
 	adc_init();
 	// Make sure GPIO is high-impedance, no pullups etc
 	adc_gpio_init(26);
+	adc_gpio_init(27);
+	adc_gpio_init(28);
+	adc_gpio_init(29);
 	// Select ADC input 0 (GPIO26)
 	adc_select_input(0);
 }
