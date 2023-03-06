@@ -59,12 +59,11 @@ int main() {
 
 	ip_addr_t destination_ip;
 
-	printf("[UDPServer] DNS Lookup in progress...\n");
 	struct dns_callback callback_struct = {0};
 	while (!callback_struct.valid) {
 		err_t err = dns_gethostbyname(HOST, &destination_ip, on_dns_found, &callback_struct);
 		if (err == ERR_INPROGRESS) {
-			printf("[UDPServer] DNS lookup in progress...\n");
+			printf("[UDPServer] DNS lookup for %s in progress...\n", HOST);
 		} else if (err == ERR_ARG) {
 			printf("[UDPServer] DNS lookup failure ARG\n");
 		} else if (err == ERR_OK) {
@@ -74,7 +73,7 @@ int main() {
 		sleep_ms(10);
 	}
 
-	printf("[UDPServer] DNS Resolved to: %d.%d.%d.%d\n", (callback_struct.addr->addr & 0xff),
+	printf("[UDPServer] DNS for %s Resolved to: %d.%d.%d.%d\n", HOST, (callback_struct.addr->addr & 0xff),
 		   (callback_struct.addr->addr >> 8) & 0xff, (callback_struct.addr->addr >> 16) & 0xff,
 		   callback_struct.addr->addr >> 24);
 
@@ -186,7 +185,7 @@ void adc_initialize() {
 	adc_gpio_init(26);
 	adc_gpio_init(27);
 	adc_gpio_init(28);
-	adc_gpio_init(29);
+	// adc_gpio_init(29);
 	// Select ADC input 0 (GPIO26)
 	adc_select_input(0);
 }

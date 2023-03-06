@@ -13,6 +13,7 @@ target_sources(${PROJECT} PRIVATE
 target_compile_definitions(main PRIVATE
             WIFI_SSID=\"${WIFI_SSID}\"
             WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+            HOST=\"${HOST}\"
             )
 
 
