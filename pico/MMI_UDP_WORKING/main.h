@@ -2,7 +2,7 @@
 #define MAIN_H
 
 #define PORT 6001
-#define HOST "fedora"
+#define HOST "nate-Blade-15"
 #define MAX_SAMPLES 32
 #define RESPONSE_PORT 6001
 
