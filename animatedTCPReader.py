@@ -8,6 +8,14 @@ import sys
 from matplotlib import pyplot as plt
 from matplotlib import animation
 
+ 
+
+localIP     = "0.0.0.0"
+
+localPort   = 6001
+
+bufferSize  = 1024
+
 def handle_close_event(evt):
     sys.exit(0)
 
@@ -16,16 +24,17 @@ class Sensor(object):
     def __init__(self, addr, testing=False):
         self.testing = testing
         if not self.testing:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.connect(addr)
-            self.file = open("TestData.csv")
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.sock.bind((localIP, localPort))
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 500)
+            #self.file = open("TestData.csv")
         else:
             self.x = [0]
             self.y = [0]
     def __call__(self):
         if not self.testing:
             # print("Starting read")
-            data = self.sock.recv(1024).decode('utf-8')
+            data = self.sock.recv(bufferSize).decode('utf-8')
             # print("read bytes:", data)
             x = []
             y = []
@@ -35,8 +44,8 @@ class Sensor(object):
                 x.append(float(splt[1]))
                 y.append(float(splt[2]))
 
-            # print("finishing read")
-            # print(x, y)
+            #print("finishing read")
+            #print(x, y)
             return x, y
         else:
             # delay for a bit
@@ -52,7 +61,7 @@ def main(ip, port, keep):
 
     keep = int(keep) # number of points to keep
 
-    sensor = Sensor(addr, True)
+    sensor = Sensor(addr, False)
 
     # 3 element gaussian kernel
     kernel = np.array([0.25, 0.5, 0.25])
@@ -85,9 +94,9 @@ def main(ip, port, keep):
 
     while True:
         new_x, new_y = sensor()
-        # new_x = x + new_x
+        #new_x = x + new_x
         new_y = y + new_y
-        # x = new_x[-keep:]
+        #x = new_x[-keep:]
         y = new_y[-keep:]
         convy = np.convolve(y, kernel, mode='same')[-keep:]
 
@@ -105,7 +114,7 @@ def main(ip, port, keep):
         # fill in the axes rectangle
         fig.canvas.blit(ax[0].bbox)
 
-        plt.pause(0.1)
+        plt.pause(0.000001)
 
 if __name__ == '__main__':
     if len(sys.argv) == 4:

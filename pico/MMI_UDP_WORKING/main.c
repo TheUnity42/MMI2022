@@ -29,7 +29,7 @@ int main() {
 	struct udp_pcb *spcb;
 
 	stdio_init_all();
-
+	
 	if (cyw43_arch_init()) {
 		DEBUG_printf("[UDPServer] failed to initialise\n");
 		return 1;
@@ -89,11 +89,12 @@ int main() {
 			// send all data we have available
 			while(queue_try_remove(adc_queue, &sample)) {
 				// format into buffer
+				
 				buffer_length = snprintf(
 					buffer, MSG_BUFFER_SIZE, MESSAGE_STR, (float)queue_get_level(adc_queue),
 					sample.timestamp, sample.value0 * CONVERSION_FACTOR,
 					sample.value1 * CONVERSION_FACTOR, sample.value2 * CONVERSION_FACTOR,
-					27.0 - (sample.temperature * CONVERSION_FACTOR - 0.706) / 0.001721);
+					sample.label);
 				// send buffer to server
 				send_UDP(callback_struct.addr, PORT, buffer, buffer_length);
 			}			
@@ -151,10 +152,15 @@ bool adc_callback(struct repeating_timer *t) {
 	adc_select_input(2);
 	sample.value2 = adc_read();
 	adc_select_input(3);
-	sample.temperature = adc_read();
+	sample.label = gpio_get(BUTTON);
+	
+	
 	// timestamp the sample
 	sample.timestamp = to_us_since_boot(get_absolute_time());
 	// enqueue the sample (throw away the error, we jsut wont write beyond the max)
+
+	
+
 	bool success = queue_try_add(adc_queue, &sample);
 	// return true to keep the timer going
 	return true;
@@ -185,6 +191,10 @@ void adc_initialize() {
 	adc_gpio_init(26);
 	adc_gpio_init(27);
 	adc_gpio_init(28);
+	
+	gpio_init(BUTTON);
+    gpio_set_dir(BUTTON, GPIO_IN);
+    gpio_pull_down(BUTTON);
 	// adc_gpio_init(29);
 	// Select ADC input 0 (GPIO26)
 	adc_select_input(0);

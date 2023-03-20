@@ -2,14 +2,16 @@
 #define MAIN_H
 
 #define PORT 6001
-#define HOST "fedora"
+#define HOST "nate-Blade-15"
 #define MAX_SAMPLES 32
 #define RESPONSE_PORT 6001
 
 #define DEBUG_printf printf
 
-#define MESSAGE_STR "(%f,%llu,%f,%f,%f)\n"
-#define MSG_BUFFER_SIZE 128
+#define MESSAGE_STR "(%f,%llu,%f,%f,%f,%d)\n"
+#define MSG_BUFFER_SIZE 136
+
+#define BUTTON 10
 
 const inline float CONVERSION_FACTOR = 3.3f / (1 << 12);
 
@@ -22,7 +24,8 @@ typedef struct SAMPLE_T_ {
 	uint16_t value0;
 	uint16_t value1;
 	uint16_t value2;
-	uint16_t temperature;
+	uint8_t label;
+	
 	uint64_t timestamp;
 } sample_t;
 
