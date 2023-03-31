@@ -1,6 +1,6 @@
 mkdir -p build
 cd build
-cmake .. -DPICO_SDK_PATH=../../pico-sdk -DPICO_BOARD=pico_w -DWIFI_SSID=Unity -DWIFI_PASSWORD=42Unit24
+cmake .. -DPICO_SDK_PATH=../../pico-sdk -DPICO_BOARD=pico_w -DWIFI_SSID=Unity -DWIFI_PASSWORD=42Unit24 
 make -j12
 
 # flag to connect to board -w

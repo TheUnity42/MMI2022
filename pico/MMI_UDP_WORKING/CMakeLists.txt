@@ -14,6 +14,7 @@ target_compile_definitions(main PRIVATE
             WIFI_SSID=\"${WIFI_SSID}\"
             WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
             HOST=\"${HOST}\"
+            PORT=\"${PORT}\"
             )
 
 

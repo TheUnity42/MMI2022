@@ -1,17 +1,17 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#define PORT 6001
-#define HOST "nate-Blade-15"
+#define PORT 6002
+#define HOST "fedora"
 #define MAX_SAMPLES 32
-#define RESPONSE_PORT 6001
+#define RESPONSE_PORT 6000
 
 #define DEBUG_printf printf
 
 #define MESSAGE_STR "(%f,%llu,%f,%f,%f,%d)\n"
 #define MSG_BUFFER_SIZE 136
 
-#define BUTTON 10
+#define BUTTON 5
 
 const inline float CONVERSION_FACTOR = 3.3f / (1 << 12);
 
