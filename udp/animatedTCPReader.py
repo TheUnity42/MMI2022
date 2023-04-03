@@ -67,20 +67,19 @@ class SensorPlot:
         #new_x = x + new_x
         n_y0 = self.y0 + n_y0
         n_y1 = self.y1 + n_y1
-        n_y2 = y2 + n_y2
+        n_y2 = self.y2 + n_y2
 
         #x = new_x[-keep:]
-        y0 = n_y0[-self.keep:]
-        y1 = n_y1[-self.keep:]
-        y2 = n_y2[-self.keep:]
-
+        self.y0 = n_y0[-self.keep:]
+        self.y1 = n_y1[-self.keep:]
+        self.y2 = n_y2[-self.keep:]
 
         self.plot0[0].set_xdata(self.x)
-        self.plot0[0].set_ydata(y0)
+        self.plot0[0].set_ydata(self.y0)
         self.plot1[0].set_xdata(self.x)
-        self.plot1[0].set_ydata(y1)
+        self.plot1[0].set_ydata(self.y1)
         self.plot2[0].set_xdata(self.x)
-        self.plot2[0].set_ydata(y2)
+        self.plot2[0].set_ydata(self.y2)
 
         # redraw the plots
         self.ax[0].draw_artist(self.plot0[0])
@@ -108,7 +107,7 @@ def main(ip, port, keep, file_name):
 
     fig.canvas.mpl_connect('close_event', create_close_handler([board0, board1]))
 
-    ax[0].set_title(f"Sensor Data from {addr0[0]}:{addr0[1]}-{addr1[0]}")
+    ax[0].set_title(f"Sensor Data from {addr0[0]}:{addr0[1]}-{addr1[1]}")
     ax[0].legend()
     for axi in ax:
         axi.set_ylim(0,3.5)
@@ -138,5 +137,5 @@ if __name__ == '__main__':
     if len(sys.argv) == 5:
         main(sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4])
     else:
-        print("Usage: python3 plot.py <ip> <port> <graph_window> <file>")
+        print("Usage: python plot.py <ip> <port> <graph_window> <file>")
     sys.exit(0)

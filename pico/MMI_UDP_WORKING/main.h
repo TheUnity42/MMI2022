@@ -1,7 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#define PORT 6002
+#define PORT 6001
 #define HOST "fedora"
 #define MAX_SAMPLES 32
 #define RESPONSE_PORT 6000
