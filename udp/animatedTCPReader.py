@@ -58,9 +58,9 @@ class SensorPlot:
         self.ax = ax
         self.board = board
         
-        self.plot0 = ax[0].plot(self.x, self.y0, color='r', label=f'{board.name}: Sensor 0')
-        self.plot1 = ax[0].plot(self.x, self.y1, color='g', label=f'{board.name}: Sensor 1')
-        self.plot2 = ax[0].plot(self.x, self.y2, color='b', label=f'{board.name}: Sensor 2')
+        self.plot0 = ax[0].plot(self.x, self.y0, label=f'{board.name}: Sensor 0')
+        self.plot1 = ax[0].plot(self.x, self.y1, label=f'{board.name}: Sensor 1')
+        self.plot2 = ax[0].plot(self.x, self.y2, label=f'{board.name}: Sensor 2')
     
     def __call__(self):
         n_x, n_y0, n_y1, n_y2 = self.board()
@@ -99,7 +99,8 @@ def main(ip, port, keep, file_name):
     board0 = Boards("Board0", addr0, file)
     board1 = Boards("Board1", addr1, file)
 
-    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+    fig, ax = plt.subplots(1, 1, figsize=(12, 6))
+    ax = [ax]
     fig.tight_layout(pad=3)
 
     s_plot0 = SensorPlot(ax, board0, keep)
