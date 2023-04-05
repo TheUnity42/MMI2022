@@ -2,9 +2,10 @@
 #define MAIN_H
 
 #define PORT 6001
-#define HOST "fedora"
+#define HOST "mmi-host"
 #define MAX_SAMPLES 32
 #define RESPONSE_PORT 6000
+#define SAMPLE_PERIOD 1
 
 #define DEBUG_printf printf
 

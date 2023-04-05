@@ -1,9 +1,9 @@
-import random
 import time
 import socket
 import re
 import numpy as np
 import sys
+import pickle
 
 from matplotlib import pyplot as plt
 
@@ -54,6 +54,12 @@ class SensorPlot:
         self.y0 = [0]*keep
         self.y1 = [0]*keep
         self.y2 = [0]*keep
+
+        self.y0_mu = 0
+        self.y1_mu = 0
+        self.y2_mu = 0
+        self.attenuation = 0.0
+
         self.keep = keep
         self.ax = ax
         self.board = board
@@ -69,10 +75,13 @@ class SensorPlot:
         n_y1 = self.y1 + n_y1
         n_y2 = self.y2 + n_y2
 
-        #x = new_x[-keep:]
-        self.y0 = n_y0[-self.keep:]
-        self.y1 = n_y1[-self.keep:]
-        self.y2 = n_y2[-self.keep:]
+        self.y0 = [ny - self.y0_mu for ny in n_y0[-self.keep:]]
+        self.y1 = [ny - self.y1_mu for ny in n_y1[-self.keep:]]
+        self.y2 = [ny - self.y2_mu for ny in n_y2[-self.keep:]]
+
+        self.y1_mu = (1 - self.attenuation) * self.y1_mu + self.attenuation * np.mean(self.y1)
+        self.y2_mu = (1 - self.attenuation) * self.y2_mu + self.attenuation * np.mean(self.y2)
+        self.y0_mu = (1 - self.attenuation) * self.y0_mu + self.attenuation * np.mean(self.y0)
 
         self.plot0[0].set_xdata(self.x)
         self.plot0[0].set_ydata(self.y0)
@@ -88,9 +97,15 @@ class SensorPlot:
     
 
 
-def main(ip, port, keep, file_name):
+def main(ip, port, keep, file_name, predict):
     addr0 = (str(ip), int(port))
     addr1 = (str(ip), int(port)+1)
+
+    predict = bool(predict)
+    print("=== MMI Live Data UI ===")
+    print(f"\tListening on Ports {addr0[1]}-{addr1[1]}")
+    print(f"\tRunning Prediction: {predict}")
+    print(f"\tLogging Data to {file_name}")
 
     keep = int(keep) # number of points to keep
 
@@ -102,6 +117,10 @@ def main(ip, port, keep, file_name):
     fig, ax = plt.subplots(1, 1, figsize=(12, 6))
     ax = [ax]
     fig.tight_layout(pad=3)
+
+    activations = [0]*keep
+    activations_x = np.linspace(-keep, 0, keep)
+    activation_plot = ax[0].plot(activations_x, activations, label="Activation")
 
     s_plot0 = SensorPlot(ax, board0, keep)
     s_plot1 = SensorPlot(ax, board1, keep)
@@ -118,9 +137,17 @@ def main(ip, port, keep, file_name):
     # cache background
     background = fig.canvas.copy_from_bbox(ax[0].bbox)
 
+    # load the model
+    tfc = None
+    with open('ring_model.pkl', 'rb') as f:
+        tfc = pickle.load(f)
+
     plt.ion()
     plt.show()
     plt.pause(0.1)
+
+    tts = time.time()
+    run_model = False
 
     while True:
         # restore background
@@ -129,6 +156,17 @@ def main(ip, port, keep, file_name):
         s_plot0()
         s_plot1()
 
+        if run_model and predict:
+            X = np.vstack([s_plot0.y0, s_plot0.y1, s_plot0.y2, s_plot1.y0, s_plot1.y1, s_plot1.y2]).T
+            
+            y = tfc.predict(X)
+            # y = np.convolve(y, np.ones(int(keep/5))/(int(keep/5)), 'same')
+
+            activation_plot[0].set_ydata(3.3 * y)
+            ax[0].draw_artist(activation_plot[0])
+        else:
+            run_model = time.time() - tts > 3
+
         # fill in the axes rectangle
         fig.canvas.blit(ax[0].bbox)
 
@@ -136,7 +174,7 @@ def main(ip, port, keep, file_name):
 
 if __name__ == '__main__':
     if len(sys.argv) == 5:
-        main(sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4])
+        main("0.0.0.0", sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4])
     else:
-        print("Usage: python plot.py <ip> <port> <graph_window> <file>")
+        print("Usage: python plot.py <port> <graph_window> <file> <predict>")
     sys.exit(0)
