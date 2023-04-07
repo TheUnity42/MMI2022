@@ -4,16 +4,21 @@ import re
 import numpy as np
 import sys
 import pickle
+import serial
 
 from matplotlib import pyplot as plt
 
 bufferSize  = 1024
 
-def create_close_handler(boards):
+def create_close_handler(boards, file, claw):
     def handle_close_event(evt):
         # shutdown
         for board in boards:
             board.close()
+        if file:
+            file.close()
+        if claw:
+            claw.close()
         sys.exit(0)
     return handle_close_event
 
@@ -97,7 +102,8 @@ class SensorPlot:
     
 
 
-def main(ip, port, keep, file_name, predict):
+def main(ip, port, file_name, predict, claw_port):
+    keep = 150
     addr0 = (str(ip), int(port))
     addr1 = (str(ip), int(port)+1)
 
@@ -106,10 +112,17 @@ def main(ip, port, keep, file_name, predict):
     print(f"\tListening on Ports {addr0[1]}-{addr1[1]}")
     print(f"\tRunning Prediction: {predict}")
     print(f"\tLogging Data to {file_name}")
+    print(f"\tClaw Port: {claw_port}")
 
     keep = int(keep) # number of points to keep
 
     file = open(file_name, "w+")
+
+    # open serial port for claw
+    claw = None
+    if predict:
+        claw = serial.Serial(claw_port, 9600, timeout=1)
+        claw.flush()
 
     board0 = Boards("Board0", addr0, file)
     board1 = Boards("Board1", addr1, file)
@@ -125,7 +138,7 @@ def main(ip, port, keep, file_name, predict):
     s_plot0 = SensorPlot(ax, board0, keep)
     s_plot1 = SensorPlot(ax, board1, keep)
 
-    fig.canvas.mpl_connect('close_event', create_close_handler([board0, board1]))
+    fig.canvas.mpl_connect('close_event', create_close_handler([board0, board1], file, claw))
 
     ax[0].set_title(f"Sensor Data from {addr0[0]}:{addr0[1]}-{addr1[1]}")
     ax[0].legend()
@@ -162,6 +175,16 @@ def main(ip, port, keep, file_name, predict):
             y = tfc.predict(X)
             # y = np.convolve(y, np.ones(int(keep/5))/(int(keep/5)), 'same')
 
+            # pack last 8 activations into a single byte
+            claw_byte = 0
+            for i in range(8):
+                if y[-i] > 0.5:
+                    claw_byte |= 1 << i
+            print(claw_byte)
+
+            # send to claw
+            claw.write(bytes([claw_byte]))
+
             activation_plot[0].set_ydata(3.3 * y)
             ax[0].draw_artist(activation_plot[0])
         else:
@@ -176,5 +199,5 @@ if __name__ == '__main__':
     if len(sys.argv) == 5:
         main("0.0.0.0", sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4])
     else:
-        print("Usage: python plot.py <port> <graph_window> <file> <predict>")
+        print("Usage: python plot.py <port> <file> <predict> <claw port>")
     sys.exit(0)
