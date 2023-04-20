@@ -6,13 +6,9 @@ int LPWM=6;
 int L_EN=7;
 int R_EN=8;
 
+//int spd = 100;
 
-
-void openGripper()
-{
-  Serial.begin(9600);
-
-  
+void setup_gripper() {
   for(int i=5;i<9;i++){
    pinMode(i,OUTPUT);
   }
@@ -21,6 +17,29 @@ void openGripper()
   }
   digitalWrite(R_EN,HIGH);
   digitalWrite(L_EN,HIGH);
+}
+
+void closeSpeed(int spd) {
+  analogWrite(RPWM,0);
+  analogWrite(LPWM,spd);
+}
+
+void openSpeed(int spd) {
+  analogWrite(LPWM,0);
+  analogWrite(RPWM,spd);
+}
+
+void neutral() {
+  analogWrite(LPWM,0);
+  analogWrite(RPWM,0);
+}
+
+void openGripper()
+{
+//  Serial.begin(9600);
+
+  
+  
 
   
 //  for(int i=0;i<256;i++){
@@ -30,22 +49,14 @@ void openGripper()
     delay(50);
   }
   
-  Serial.print("open finished\n");
+//  Serial.print("open finished\n");
 
-  Serial.print("\n");
+//  Serial.print("\n");
 }
 
 void closeGripper()
 {
-  Serial.begin(9600);
-  for(int i=5;i<9;i++){
-   pinMode(i,OUTPUT);
-  }
-  for(int i=5;i<9;i++){
-   digitalWrite(i,LOW);
-  }
-  digitalWrite(R_EN,HIGH);
-  digitalWrite(L_EN,HIGH);
+
 
   /*
   for(int i=0;i<100;){
@@ -58,10 +69,10 @@ void closeGripper()
   */
   analogWrite(RPWM, 0);
   analogWrite(RPWM, 100);
-  delay(3000);
+//  delay(3000);
 
-  Serial.print("close finished\n");
+//  Serial.print("close finished\n");
 
-  Serial.print("\n");
+//  Serial.print("\n");
 }
 #endif

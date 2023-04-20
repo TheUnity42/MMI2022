@@ -28,12 +28,16 @@ int main() {
 	repeating_timer_t repeating_timer;
 	struct udp_pcb *spcb;
 
+	// initialize serial port hardware for debugging
 	stdio_init_all();
 	
+	// initialize Wifi module
 	if (cyw43_arch_init()) {
 		DEBUG_printf("[UDPServer] failed to initialise\n");
 		return 1;
 	}
+
+	// enable station mode
 	cyw43_arch_enable_sta_mode();
 
 	printf("[UDPServer] Connecting to WiFi...\n");
@@ -45,16 +49,21 @@ int main() {
 		printf("[UDPServer] Connected.\n");
 	}
 
+	// initialize hardware timer interrupt
 	alarm_pool_init_default();
+
+	// get default alarm pool
 	alarm_pool = alarm_pool_get_default();
 
-	alarm_pool_add_repeating_timer_ms(alarm_pool, 100, set_send_UDP, NULL, &repeating_timer);
+	// initialize UDP interrupt
+	alarm_pool_add_repeating_timer_ms(alarm_pool, 40, set_send_UDP, NULL, &repeating_timer);
 
+	// create UDP protocol control blocks
 	upcb = udp_new();
 	spcb = udp_new();
 
+	// bind UDP protocol control blocks to ports
 	err_t err = udp_bind(spcb, IP_ADDR_ANY, RESPONSE_PORT);
-
 	udp_recv(spcb, recv_from_UDP, NULL);
 
 	ip_addr_t destination_ip;
@@ -114,11 +123,15 @@ int main() {
 static int64_t set_send_UDP(alarm_id_t id, void *userdata) { timer_flag = true; }
 
 void send_UDP(ip_addr_t *destAddr, int port, void *data, int data_size) {
+	// allocate pbuf memory
 	struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, data_size, PBUF_RAM);
 	memcpy(p->payload, data, data_size);
+	// start wifi mode (stops interrupts)
 	cyw43_arch_lwip_begin();
 	udp_sendto(upcb, p, destAddr, port);
+	// end wifi mode
 	cyw43_arch_lwip_end();
+	// free pbuf
 	pbuf_free(p);
 }
 
