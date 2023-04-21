@@ -63,7 +63,7 @@ void loop() {
     } else {
       label = ch;
     }
-    Serial.println(label);
+//    Serial.println(label);
   }
 
   

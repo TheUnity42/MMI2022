@@ -11,6 +11,7 @@ from matplotlib.widgets import Slider, Button
 
 # buffer size to read in from socket
 bufferSize  = 1024
+gaussian_filtering = False
 
 def create_close_handler(boards, file, claw):
     # create a handler for the close event
@@ -177,16 +178,14 @@ def main(ip, port, file_name, predict, claw_port):
     lookback_ax = fig.add_axes([0.12, 0.05, 0.22, 0.03])
     threshold_ax = fig.add_axes([0.12, 0.10, 0.22, 0.03])
 
-    look_back = 0
-    threshold = 3.0
-
-    gaussian_filtering = False
+    look_back = 10
+    threshold = 1.0
 
     # setup slider for lookback selection
     lookback_slider = Slider(
         ax=lookback_ax,
         label='Lookback ',
-        valmin=0,
+        valmin=1,
         valmax=keep//2,
         valinit=look_back,
         valstep=1,
@@ -203,7 +202,7 @@ def main(ip, port, file_name, predict, claw_port):
     )
 
     # setup button for gaussian filtering
-    filter_button = Button(plt.axes([0.85, 0.05, 0.1, 0.075]), 'Enable \nGaussian Filter')
+    filter_button = Button(plt.axes([0.85, 0.065, 0.1, 0.075]), 'Enable\n Filter')
 
     activations = [0]*keep
     activations_x = np.linspace(-keep, 0, keep)
@@ -231,12 +230,11 @@ def main(ip, port, file_name, predict, claw_port):
     # callback for gaussian filter button
     def update_filter(val):
         global gaussian_filtering
-        gaussian_filtering = val
-        print(val)
+        gaussian_filtering = not gaussian_filtering
         if gaussian_filtering:
-            filter_button.label.set_text('Disable \nGaussian Filter')
+            filter_button.label.set_text('Disable\n Filter')
         else:
-            filter_button.label.set_text('Enable \nGaussian Filter')
+            filter_button.label.set_text('Enable\n Filter')
 
     lookback_slider.on_changed(update_lookback)
     threshold_slider.on_changed(update_threshold)
@@ -250,7 +248,7 @@ def main(ip, port, file_name, predict, claw_port):
     fig.canvas.mpl_connect('close_event', create_close_handler([board0, board1], file, claw))
 
     ax[0].set_title(f"Sensor Data from {addr0[0]}:{addr0[1]}-{addr1[1]}")
-    ax[0].legend()
+    ax[0].legend(loc='upper left')
     for axi in ax:
         axi.set_ylim(0,3.5)
         axi.set_xlabel('Sample #')
@@ -261,7 +259,7 @@ def main(ip, port, file_name, predict, claw_port):
 
     # load the model
     tfc = None
-    with open('model.pkl', 'rb') as f:
+    with open('model_light.pkl', 'rb') as f:
         tfc = pickle.load(f)
 
     plt.ion()
@@ -271,6 +269,11 @@ def main(ip, port, file_name, predict, claw_port):
     tts = time.time()
     run_model = False
 
+    kernel_half_size = 3
+    # kernel = np.exp(-0.5*np.linspace(-kernel_half_size,kernel_half_size)**2)/np.sqrt(2*np.pi)
+    kernel = np.ones(2*kernel_half_size)
+    kernel = kernel/np.sum(kernel)
+
     while True:
         # restore background
         fig.canvas.restore_region(background)
@@ -279,19 +282,22 @@ def main(ip, port, file_name, predict, claw_port):
         s_plot1()
 
         if run_model and predict:
+            
             # shape the input data for the model
             X = np.vstack([s_plot0.y0, s_plot0.y1, s_plot0.y2, s_plot1.y0, s_plot1.y1, s_plot1.y2]).T
+            
             
             # run the model
             y = tfc.predict(X)
             if gaussian_filtering:
-                # y = np.convolve(y, np.ones(2)/2, 'same')
-                y = np.convolve(y, [0.25, 0.5, 0.25], 'same')
+                y = np.convolve(y, kernel, 'same')
+                # y = y > threshold/3.3
+                # for i in range(len(y)-5):
+                #     y[i:i+5] = [y[i]]*5
+                # print(y)
 
             # pack last 8 activations into a single byte
-            claw_cmd = b"1" if np.mean(y[-look_back])>(threshold/3.3) else b"2"
-            # print(claw_byte)
-
+            claw_cmd = b"1" if y[-look_back]>(threshold/3.3) else b"2"
 
             # send to claw
             if claw:
@@ -312,7 +318,7 @@ def main(ip, port, file_name, predict, claw_port):
         fig.canvas.blit(ax[0].bbox)
 
         # run at 30 fps
-        plt.pause(1000/30)
+        plt.pause(1.0/30.0)
 
 if __name__ == '__main__':
     if len(sys.argv) == 5:
